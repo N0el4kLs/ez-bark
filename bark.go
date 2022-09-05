@@ -114,7 +114,7 @@ func notice(o Options) error {
 		return err
 	}
 
-	client := req.C().DevMode().Post().SetBodyJsonBytes(send)
+	client := req.C().Post().SetBodyJsonBytes(send)
 	resp, err := client.Post(o.BarkServer + "/push")
 	if err != nil {
 		log.Fatalln("Server maybe down")

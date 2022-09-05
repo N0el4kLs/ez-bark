@@ -12,6 +12,14 @@
 
 `EzBark`的出现是为了更方便的进行消息推送.你可以将其融入到自己的脚本中,或是生成可执行文件配合`shell`脚本进行使用.
 
+## Download
+
+你可以使用以下命令安装二进制文件,也可以下载源码自己编译.
+
+```
+go install github.com/N0el4kLs/ez-bark/cmd/ezbark@latest
+```
+
 ## Usage
 
 1. 支持使用命令行输入,简单、快速完成消息推送
@@ -22,8 +30,10 @@
 
 ```
 ./ezbark -init http://127.0.0.1,abdefg
+./ezbark -showconf=true
+./ezbark -test=true
 ./ezbark -t title -m message -g group -s bell
-./ezbark -initf filename
+./ezbark -initf filename.yml
 ./ezbark -f bark.yml
 ```
 

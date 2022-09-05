@@ -85,6 +85,7 @@ func InitOptions() (*ezbark.Options, error) {
 
 	err := checkGlobalConf()
 	if err != nil {
+		log.Fatalln("Can not find global config.yml.Please use init option to generate that.")
 		return nil, err
 	}
 
