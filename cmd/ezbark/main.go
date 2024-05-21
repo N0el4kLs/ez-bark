@@ -19,7 +19,7 @@ func main() {
 
 	if options.TestSwitch {
 		options.Title = "Test"
-		options.Body = "This is Test case"
+		options.Messages = append(options.Messages, "This is Test case")
 	}
 
 	err = options.Notice()

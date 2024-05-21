@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -8,8 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	ezbark "github.com/N0el4kLs/ez-bark"
 	"gopkg.in/yaml.v2"
+
+	ezbark "github.com/N0el4kLs/ez-bark"
 )
 
 var (
@@ -29,6 +31,8 @@ var (
 	send    *ezbark.Send
 	conf    *ezbark.Conf
 	options *ezbark.Options
+
+	Bodys []string
 )
 
 func newConf(server, key string) *ezbark.Conf {
@@ -57,6 +61,7 @@ func InitOptions() (*ezbark.Options, error) {
 	flag.Parse()
 
 	// handler init options
+	// if init options is not empty, then generate a config file
 	if Init != "" {
 		confSilce := strings.Split(Init, ",")
 		server, deviceKey := confSilce[0], confSilce[1]
@@ -85,7 +90,7 @@ func InitOptions() (*ezbark.Options, error) {
 
 	err := checkGlobalConf()
 	if err != nil {
-		log.Fatalln("Can not find global config.yml.Please use init option to generate that.")
+		log.Fatalln("Can not find global config.yml.Please use init option to set config...")
 		return nil, err
 	}
 
@@ -122,14 +127,36 @@ func InitOptions() (*ezbark.Options, error) {
 		os.Exit(0)
 	}
 
+	if hasStdin() {
+		s := bufio.NewScanner(os.Stdin)
+		bodyBuilder := strings.Builder{}
+		len := 0
+		for s.Scan() {
+			l, _ := bodyBuilder.WriteString(s.Text())
+			bodyBuilder.WriteString("\n")
+			if len < 500 && len+l+1 > 500 {
+				Bodys = append(Bodys, bodyBuilder.String())
+				log.Println(bodyBuilder.String())
+				bodyBuilder.Reset()
+				len = 0
+			}
+			len += l + 1
+		}
+	}
+
+	if Body == "" && !Test && !hasStdin() {
+		log.Fatalln("Messages of the message is required")
+	}
+	Bodys = append(Bodys, Body)
+
 	send = &ezbark.Send{
-		Body:  Body,
-		Title: Title,
-		Badge: Badge,
-		Icon:  Icon,
-		Group: Group,
-		Url:   Url,
-		Sound: Sound,
+		Messages: Bodys,
+		Title:    Title,
+		Badge:    Badge,
+		Icon:     Icon,
+		Group:    Group,
+		Url:      Url,
+		Sound:    Sound,
 	}
 
 	if file != "" {
@@ -154,4 +181,13 @@ func InitOptions() (*ezbark.Options, error) {
 	}
 
 	return options, nil
+}
+
+func hasStdin() bool {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+
+	return (stat.Mode() & os.ModeCharDevice) == 0
 }
