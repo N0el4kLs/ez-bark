@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/imroc/req/v3"
 	"gopkg.in/yaml.v2"
+
+	"github.com/imroc/req/v3"
 )
 
 // Options struct to store data in need
@@ -21,14 +22,15 @@ type Options struct {
 
 // Send post data
 type Send struct {
-	Body  string `json:"body" yaml:"body"`
-	Title string `json:"title" yaml:"title"`
-	Badge int    `json:"badge" yaml:"badge"`
-	Icon  string `json:"icon" yaml:"icon"`
-	Group string `json:"group" yaml:"group"`
-	Url   string `json:"url" yaml:"url"`
-	Sound string `json:"sound" yaml:"sound"`
-	Key   string `json:"device_key" yaml:"key"`
+	Messages []string
+	Body     string `json:"body" yaml:"body"`
+	Title    string `json:"title" yaml:"title"`
+	Badge    int    `json:"badge" yaml:"badge"`
+	Icon     string `json:"icon" yaml:"icon"`
+	Group    string `json:"group" yaml:"group"`
+	Url      string `json:"url" yaml:"url"`
+	Sound    string `json:"sound" yaml:"sound"`
+	Key      string `json:"device_key" yaml:"key"`
 }
 
 // Conf store config data
@@ -63,7 +65,7 @@ func (o *Options) SetSend(send map[string]interface{}) *Options {
 			o.Title = v
 		case "body":
 			v := value.(string)
-			o.Body = v
+			o.Messages = append(o.Messages, v)
 		case "badge":
 			v := value.(int)
 			o.Badge = v
@@ -108,18 +110,24 @@ func (o *Options) Notice() error {
 
 // Notice command line main logic
 func notice(o Options) error {
-	send, err := json.Marshal(o.Send)
-	if err != nil {
-		log.Fatalln("Data struct err")
-		return err
-	}
+	for _, v := range o.Send.Messages {
+		o.Send.Body = v
+		send, err := json.Marshal(o.Send)
+		if err != nil {
+			log.Fatalln("Data struct err")
+			return err
+		}
 
-	client := req.C().Post().SetBodyJsonBytes(send)
-	resp, err := client.Post(o.BarkServer + "/push")
-	if err != nil {
-		log.Fatalln("Server maybe down")
-		return err
+		client := req.C().Post().SetBodyJsonBytes(send)
+		if strings.HasSuffix(o.BarkServer, "/") {
+			o.BarkServer = o.BarkServer[:len(o.BarkServer)-1]
+		}
+		resp, err := client.Post(o.BarkServer + "/push")
+		if err != nil {
+			log.Fatalln("Server maybe down")
+			return err
+		}
+		fmt.Println(resp)
 	}
-	fmt.Println(resp)
 	return nil
 }
