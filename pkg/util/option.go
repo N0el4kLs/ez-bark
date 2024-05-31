@@ -32,7 +32,7 @@ var (
 	conf    *ezbark.Conf
 	options *ezbark.Options
 
-	Bodys []string
+	Bodys = make([]string, 0, 1)
 )
 
 func newConf(server, key string) *ezbark.Conf {
@@ -130,24 +130,29 @@ func InitOptions() (*ezbark.Options, error) {
 	if hasStdin() {
 		s := bufio.NewScanner(os.Stdin)
 		bodyBuilder := strings.Builder{}
-		len := 0
+		lens := 0
 		for s.Scan() {
 			l, _ := bodyBuilder.WriteString(s.Text())
 			bodyBuilder.WriteString("\n")
-			if len < 500 && len+l+1 > 500 {
+			if lens < 500 && lens+l+1 > 500 {
 				Bodys = append(Bodys, bodyBuilder.String())
-				log.Println(bodyBuilder.String())
 				bodyBuilder.Reset()
-				len = 0
+				lens = 0
 			}
-			len += l + 1
+			lens += l + 1
+		}
+		// when the message is less than 500 characters
+		if len(Bodys) == 0 {
+			Bodys = append(Bodys, bodyBuilder.String())
 		}
 	}
 
 	if Body == "" && !Test && !hasStdin() {
 		log.Fatalln("Messages of the message is required")
 	}
-	Bodys = append(Bodys, Body)
+	if Body != "" {
+		Bodys = append(Bodys, Body)
+	}
 
 	send = &ezbark.Send{
 		Messages: Bodys,
